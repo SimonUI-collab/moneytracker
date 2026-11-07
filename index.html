@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Money Tracker</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="app-container">
+    <!-- Header -->
+    <header class="app-header">
+      <div class="header-brand">
+        <div class="logo-icon">💰</div>
+        <div>
+          <h1>Money Tracker</h1>
+          <p class="subtitle">Track your income, expenses & spending habits</p>
+        </div>
+      </div>
+      <div class="badge-pill" id="totalCountBadge" aria-live="polite">
+        <span class="badge-label">Transactions</span>
+        <span class="badge-count" id="headerTxnCount">0</span>
+      </div>
+    </header>
+
+    <!-- Overview Stats Cards -->
+    <section class="stats-grid" aria-label="Financial Summary">
+      <div class="stat-card balance-card">
+        <span class="stat-label">Net Balance</span>
+        <span class="stat-value" id="netBalance">$0.00</span>
+      </div>
+      <div class="stat-card income-card">
+        <span class="stat-label">Total Income</span>
+        <span class="stat-value text-income" id="totalIncome">$0.00</span>
+      </div>
+      <div class="stat-card expense-card">
+        <span class="stat-label">Total Expenses</span>
+        <span class="stat-value text-expense" id="totalExpense">$0.00</span>
+      </div>
+    </section>
+
+    <!-- View Switcher Tabs -->
+    <nav class="view-switcher" role="tablist" aria-label="View selection">
+      <button 
+        type="button" 
+        class="tab-btn active" 
+        id="tabListBtn" 
+        role="tab" 
+        aria-selected="true" 
+        aria-controls="listView"
+      >
+        <span class="tab-icon">📋</span>
+        <span>Transactions</span>
+      </button>
+      <button 
+        type="button" 
+        class="tab-btn" 
+        id="tabInfoBtn" 
+        role="tab" 
+        aria-selected="false" 
+        aria-controls="infoView"
+      >
+        <span class="tab-icon">📊</span>
+        <span>Infographics</span>
+      </button>
+    </nav>
+
+    <!-- Main Content Area -->
+    <main>
+      <!-- TAB 1: TRANSACTIONS VIEW -->
+      <div id="listView" class="tab-content active" role="tabpanel" aria-labelledby="tabListBtn">
+        
+        <!-- Add Transaction Form -->
+        <section class="card form-card" aria-labelledby="addTxnHeading">
+          <div class="card-header">
+            <h2 id="addTxnHeading">Add New Transaction</h2>
+          </div>
+
+          <form id="addTxnForm" autocomplete="off">
+            <!-- Type Selector: Income / Expense -->
+            <div class="form-group">
+              <label class="form-label">Transaction Type</label>
+              <div class="type-toggle-group" role="radiogroup" aria-label="Transaction Type">
+                <label class="type-radio-label expense active">
+                  <input type="radio" name="txnType" value="expense" checked>
+                  <span class="type-icon">💸</span> Expense
+                </label>
+                <label class="type-radio-label income">
+                  <input type="radio" name="txnType" value="income">
+                  <span class="type-icon">💵</span> Income
+                </label>
+              </div>
+            </div>
+
+            <!-- Amount & Category (2-column layout) -->
+            <div class="form-row">
+              <div class="form-group flex-1">
+                <label for="txnAmount" class="form-label">Amount ($)</label>
+                <div class="input-with-prefix">
+                  <span class="input-prefix">$</span>
+                  <input 
+                    type="number" 
+                    id="txnAmount" 
+                    name="amount" 
+                    placeholder="0.00" 
+                    step="0.01" 
+                    min="0.01" 
+                    required
+                  >
+                </div>
+              </div>
+
+              <div class="form-group flex-1">
+                <label for="txnCategory" class="form-label">Category</label>
+                <select id="txnCategory" name="category" required>
+                  <!-- Populated dynamically based on type -->
+                </select>
+              </div>
+            </div>
+
+            <!-- Custom Category Input (shown if "Custom / Other" selected) -->
+            <div class="form-group hidden" id="customCategoryContainer">
+              <label for="txnCustomCategory" class="form-label">Custom Category Name</label>
+              <input 
+                type="text" 
+                id="txnCustomCategory" 
+                name="customCategory" 
+                placeholder="e.g. Pet Care, Gym, Side Hustle"
+                maxlength="30"
+              >
+            </div>
+
+            <!-- Optional Note & Date -->
+            <div class="form-row">
+              <div class="form-group flex-2">
+                <label for="txnNote" class="form-label">Description / Note <span class="optional-text">(optional)</span></label>
+                <input 
+                  type="text" 
+                  id="txnNote" 
+                  name="note" 
+                  placeholder="e.g. Grocery store run, Monthly bonus"
+                  maxlength="50"
+                >
+              </div>
+              <div class="form-group flex-1">
+                <label for="txnDate" class="form-label">Date</label>
+                <input type="date" id="txnDate" name="date" required>
+              </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-block">
+              <span>+ Add Transaction</span>
+            </button>
+          </form>
+        </section>
+
+        <!-- Transaction List Section -->
+        <section class="card list-card" aria-labelledby="listHeading">
+          <div class="list-header-row">
+            <div>
+              <h2 id="listHeading">All Transactions</h2>
+              <span class="list-subtext" id="filteredCountText">0 entries</span>
+            </div>
+
+            <!-- Quick Type Filter Buttons -->
+            <div class="filter-pills" role="group" aria-label="Filter transactions">
+              <button type="button" class="filter-pill active" data-filter="all">All</button>
+              <button type="button" class="filter-pill" data-filter="expense">Expenses</button>
+              <button type="button" class="filter-pill" data-filter="income">Income</button>
+            </div>
+          </div>
+
+          <!-- Search Box -->
+          <div class="search-container">
+            <span class="search-icon">🔍</span>
+            <input 
+              type="search" 
+              id="searchInput" 
+              placeholder="Search by category, note, or amount..." 
+              aria-label="Search transactions"
+            >
+            <button type="button" id="clearSearchBtn" class="clear-search-btn hidden" title="Clear search">✕</button>
+          </div>
+
+          <!-- Transaction Items Container -->
+          <div id="transactionsContainer" class="transactions-list" role="list">
+            <!-- Dynamically populated or empty message -->
+          </div>
+        </section>
+      </div>
+
+      <!-- TAB 2: INFOGRAPHICS VIEW -->
+      <div id="infoView" class="tab-content" role="tabpanel" aria-labelledby="tabInfoBtn">
+        
+        <!-- Summary Alert for Infographics -->
+        <div class="infographics-summary-card">
+          <div class="info-stat">
+            <span class="info-stat-label">Net Savings Rate</span>
+            <span class="info-stat-value" id="savingsRate">0%</span>
+          </div>
+          <div class="info-stat-divider"></div>
+          <div class="info-stat">
+            <span class="info-stat-label">Top Expense Category</span>
+            <span class="info-stat-value" id="topExpenseCat">—</span>
+          </div>
+        </div>
+
+        <!-- Chart 1: Income vs Expenses Bar Chart -->
+        <section class="card chart-card" aria-labelledby="barChartHeading">
+          <div class="card-header">
+            <h2 id="barChartHeading">Income vs. Expenses</h2>
+            <span class="card-caption">Total comparison</span>
+          </div>
+          <div class="chart-wrapper" id="barChartWrapper">
+            <div id="barChartContainer" class="custom-bar-chart">
+              <!-- Rendered via JavaScript -->
+            </div>
+          </div>
+        </section>
+
+        <!-- Chart 2: Expenses by Category Pie Chart -->
+        <section class="card chart-card" aria-labelledby="pieChartHeading">
+          <div class="card-header">
+            <h2 id="pieChartHeading">Expenses by Category</h2>
+            <span class="card-caption">Breakdown of your spending</span>
+          </div>
+          <div class="chart-wrapper" id="pieChartWrapper">
+            <div id="pieChartContainer" class="pie-chart-layout">
+              <!-- Rendered via JavaScript -->
+            </div>
+          </div>
+        </section>
+      </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="app-footer">
+      <p>Money Tracker &bull; Data stored securely in your browser</p>
+    </footer>
+  </div>
+
+  <!-- EDIT TRANSACTION MODAL -->
+  <div id="editModal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="editModalTitle">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 id="editModalTitle">Edit Transaction</h3>
+        <button type="button" class="modal-close-btn" id="closeEditModalBtn" aria-label="Close modal">✕</button>
+      </div>
+      
+      <form id="editTxnForm">
+        <input type="hidden" id="editTxnId">
+
+        <!-- Type Selector -->
+        <div class="form-group">
+          <label class="form-label">Transaction Type</label>
+          <div class="type-toggle-group" role="radiogroup" aria-label="Edit Transaction Type">
+            <label class="type-radio-label expense" id="editTypeExpenseLabel">
+              <input type="radio" name="editTxnType" value="expense">
+              <span class="type-icon">💸</span> Expense
+            </label>
+            <label class="type-radio-label income" id="editTypeIncomeLabel">
+              <input type="radio" name="editTxnType" value="income">
+              <span class="type-icon">💵</span> Income
+            </label>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group flex-1">
+            <label for="editAmount" class="form-label">Amount ($)</label>
+            <div class="input-with-prefix">
+              <span class="input-prefix">$</span>
+              <input 
+                type="number" 
+                id="editAmount" 
+                name="amount" 
+                step="0.01" 
+                min="0.01" 
+                required
+              >
+            </div>
+          </div>
+
+          <div class="form-group flex-1">
+            <label for="editCategory" class="form-label">Category</label>
+            <select id="editCategory" name="category" required>
+              <!-- Dynamic -->
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group hidden" id="editCustomCategoryContainer">
+          <label for="editCustomCategory" class="form-label">Custom Category Name</label>
+          <input type="text" id="editCustomCategory" maxlength="30">
+        </div>
+
+        <div class="form-row">
+          <div class="form-group flex-2">
+            <label for="editNote" class="form-label">Description / Note</label>
+            <input type="text" id="editNote" maxlength="50">
+          </div>
+          <div class="form-group flex-1">
+            <label for="editDate" class="form-label">Date</label>
+            <input type="date" id="editDate" required>
+          </div>
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" class="btn btn-secondary" id="cancelEditBtn">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save Changes</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- DELETE CONFIRMATION MODAL -->
+  <div id="deleteModal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="deleteModalTitle">
+    <div class="modal-card modal-confirm">
+      <div class="delete-icon-wrapper">
+        <span>🗑️</span>
+      </div>
+      <h3 id="deleteModalTitle">Delete Transaction?</h3>
+      <p id="deleteModalMessage">Are you sure you want to delete this transaction? This action cannot be undone.</p>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-secondary" id="cancelDeleteBtn">Cancel</button>
+        <button type="button" class="btn btn-danger" id="confirmDeleteBtn">Yes, Delete</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
